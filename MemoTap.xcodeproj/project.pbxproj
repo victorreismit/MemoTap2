@@ -15,6 +15,10 @@
 		79D043472C632B3B0077F8A4 /* MemoTap_Watch_AppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D043462C632B3B0077F8A4 /* MemoTap_Watch_AppTests.swift */; };
 		79D043512C632B3B0077F8A4 /* MemoTap_Watch_AppUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D043502C632B3B0077F8A4 /* MemoTap_Watch_AppUITests.swift */; };
 		79D043532C632B3B0077F8A4 /* MemoTap_Watch_AppUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D043522C632B3B0077F8A4 /* MemoTap_Watch_AppUITestsLaunchTests.swift */; };
+		79D043642C632B480077F8A4 /* Watch_CardModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D043632C632B480077F8A4 /* Watch_CardModel.swift */; };
+		79D043662C632B600077F8A4 /* Watch_CardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D043652C632B600077F8A4 /* Watch_CardView.swift */; };
+		79D043682C632B720077F8A4 /* Watch_GameController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D043672C632B720077F8A4 /* Watch_GameController.swift */; };
+		79D0436A2C632B830077F8A4 /* Watch_MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D043692C632B830077F8A4 /* Watch_MainView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +71,10 @@
 		79D0434C2C632B3B0077F8A4 /* MemoTap Watch AppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "MemoTap Watch AppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		79D043502C632B3B0077F8A4 /* MemoTap_Watch_AppUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTap_Watch_AppUITests.swift; sourceTree = "<group>"; };
 		79D043522C632B3B0077F8A4 /* MemoTap_Watch_AppUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTap_Watch_AppUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		79D043632C632B480077F8A4 /* Watch_CardModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch_CardModel.swift; sourceTree = "<group>"; };
+		79D043652C632B600077F8A4 /* Watch_CardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch_CardView.swift; sourceTree = "<group>"; };
+		79D043672C632B720077F8A4 /* Watch_GameController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch_GameController.swift; sourceTree = "<group>"; };
+		79D043692C632B830077F8A4 /* Watch_MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Watch_MainView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +130,9 @@
 				79D043372C632B390077F8A4 /* ContentView.swift */,
 				79D043392C632B3B0077F8A4 /* Assets.xcassets */,
 				79D0433B2C632B3B0077F8A4 /* Preview Content */,
+				79D043632C632B480077F8A4 /* Watch_CardModel.swift */,
+				79D043652C632B600077F8A4 /* Watch_CardView.swift */,
+				79D043672C632B720077F8A4 /* Watch_GameController.swift */,
 			);
 			path = "MemoTap Watch App";
 			sourceTree = "<group>";
@@ -130,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				79D0433C2C632B3B0077F8A4 /* Preview Assets.xcassets */,
+				79D043692C632B830077F8A4 /* Watch_MainView.swift */,
 			);
 			path = "Preview Content";
 			sourceTree = "<group>";
@@ -309,7 +321,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				79D043642C632B480077F8A4 /* Watch_CardModel.swift in Sources */,
+				79D0436A2C632B830077F8A4 /* Watch_MainView.swift in Sources */,
+				79D043682C632B720077F8A4 /* Watch_GameController.swift in Sources */,
 				79D043382C632B390077F8A4 /* ContentView.swift in Sources */,
+				79D043662C632B600077F8A4 /* Watch_CardView.swift in Sources */,
 				79D043362C632B390077F8A4 /* MemoTapApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
