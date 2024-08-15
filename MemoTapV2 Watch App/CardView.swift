@@ -15,8 +15,11 @@ struct CardView: View {
 
     // Body property that defines how the card is displayed
     var body: some View {
-        ZStack { // Layer cards on top of each other
-            // Display card back image when the card is not face up
+        ZStack {
+            // Clear background (to allow for the parent gradient background)
+            Color.clear
+
+            // Layer cards on top of each other
             if !card.isFaceUp {
                 Image(cardBack) // Show the card back image
                     .resizable() // Allow the image to resize
@@ -27,14 +30,14 @@ struct CardView: View {
                 // Display emoji when the card is face up
                 Text(card.emoji) // Show the emoji text
                     .font(.system(size: 30)) // Set font size of the emoji
-                    .frame(width: 45, height: 65) // Use these smaller dimensions for cards in GameView
-                    .background(Color.gray) // White background for the emoji
+                    .frame(width: 45, height: 65) // Set dimensions for cards in GameView
+                    .background(Color.gray) // Background for the emoji
                     .cornerRadius(10) // Rounded corners for the card face
                     .shadow(radius: 5) // Add shadow for depth
                     .overlay(isMatched ? shineEffect() : nil) // Apply shine effect if card is matched
             }
         }
-        .frame(width: 45, height: 65) // Set smaller frame size for the card
+        .frame(width: 45, height: 65) // Set frame size for the card
         .animation(.interactiveSpring) // Add an animation for smoother transitions
     }
     

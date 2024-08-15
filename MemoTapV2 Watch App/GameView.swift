@@ -1,44 +1,57 @@
 import SwiftUI
 
+// Main game view
 struct GameView: View {
-    @State private var cards: [Card] = [] // Array to hold card instances
-    @State private var firstSelectedCardIndex: Int? // Store first selected card index
-    @State private var secondSelectedCardIndex: Int? // Store second selected card index
-    @State private var matchedCardIndices: Set<Int> = [] // Track matched card indices
-    @State private var showNextLevelAnimation = false // Track next level animation
-    @State private var currentLevel: Int // Track the current level (start with the selected level)
-    @State private var isAnimatingTransition = false // State to control UI interactions
+    @State private var cards: [Card] = [] // Array holding the cards
+    @State private var firstSelectedCardIndex: Int? // Index of the first selected card
+    @State private var secondSelectedCardIndex: Int? // Index of the second selected card
+    @State private var matchedCardIndices: Set<Int> = [] // Set of matched card indices
+    @State private var currentLevel: Int // Tracks the current level
+    @State private var isTransitioning = false // Prevents interaction during transitions
+    @State private var showCongratsMessage = false // Flag to control visibility of "Congrats!" message
+    @State private var nextLevel: Int? // Holds next level information
 
-    let selectedLevel: Int // Initial level selected by the user
+    // Level configuration for number of cards per level
+    let selectedLevel: Int
     let cardCounts: [Int: Int] = [
-        1: 10,
+        1: 10, // Level 1 includes 10 cards
         2: 12,
         3: 14,
         4: 16,
-        5: 20
+        5: 20 // Level 5 includes 20 cards
     ]
 
-    // Initializer for GameView
+    // Initializing the GameView with a selected level
     init(selectedLevel: Int) {
         self.selectedLevel = selectedLevel
-        self.currentLevel = selectedLevel // Start at the user-selected level
+        self.currentLevel = selectedLevel // Start at selected level
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                VStack {
-                    // Current level display
+        ZStack {
+            // Gradient Background
+            LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.5), Color.white.opacity(0.5)]),
+                           startPoint: .top,
+                           endPoint: .bottom)
+                .edgesIgnoringSafeArea(.all) // Extend the gradient to cover the full screen
+            
+            GeometryReader { geometry in
+                VStack(spacing: 0) { // Minimize spacing to eliminate gaps
+                    // Display the current level and instruction
                     HStack {
                         Text("Level: \(currentLevel)")
                             .font(.system(size: 10))
                             .foregroundColor(.gray)
+                        Spacer() // Separate contents
                         Text("Match the Emojis!")
                             .font(.system(size: 10))
                             .foregroundColor(.gray)
                     }
+                    .padding(.top, 5) // Optional: small padding at the top
 
+                    // Cards displayed in a scroll view
                     ScrollView {
+                        // Determine number of columns based on screen width
                         let columns = Array(repeating: GridItem(.flexible()), count: getColumnCount(screenWidth: geometry.size.width))
 
                         LazyVGrid(columns: columns, spacing: 5) {
@@ -46,138 +59,169 @@ struct GameView: View {
                                 let card = cards[index]
                                 let isMatchedCard = matchedCardIndices.contains(index)
 
+                                // CardView to display cards
                                 CardView(card: card, cardBack: "cardBack", isMatched: isMatchedCard)
                                     .onTapGesture {
-                                        // Only allow tapping if not animating a transition
-                                        if !isAnimatingTransition {
-                                            cardTapped(at: index)
-                                        }
+                                        cardTapped(at: index)
                                     }
                             }
                         }
-                        .padding()
+                        .padding(.horizontal) // Add padding around the grid
+                    }
+                    .frame(maxHeight: .infinity) // Allow ScrollView to take up all available height
+
+                    // Display congratulations message when all cards matched
+                    if showCongratsMessage {
+                        VStack {
+                            Text("Congrats!")
+                                .font(.title3) // Larger font for message
+                                .bold() // Bold text
+                                .transition(.opacity) // Transition effect for fading in
+                                .animation(.easeInOut(duration: 0.3)) // Smooth animation
+                                .padding(.vertical, 0)
+
+                            if let nextLevel = nextLevel {
+                                Text("Next Level: \(nextLevel)") // Show next level
+                                    .font(.subheadline)
+                                    .foregroundColor(.blue)
+                                    .padding(.top, 0) // Ensure no extra top padding
+                            }
+                        }
+                        .padding(.horizontal)
+                        .background(Color.black.opacity(0.8)) // Background for emphasis
+                        .cornerRadius(10) // Rounded corners
+                        .shadow(radius: 5) // Shadow for depth
                     }
                 }
+            }
+        }
+        .onAppear(perform: setupGame) // Set up the game when the view appears
+    }
 
-                // Overlay for next level animation
-                if showNextLevelAnimation {
-                    Color.black.opacity(0.7)
-                        .edgesIgnoringSafeArea(.all)
-                        .overlay(
-                            VStack {
-                                Text("Level \(currentLevel)") // Show the correct current level
-                                    .font(.largeTitle)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                                    .padding()
+    // Function to determine the number of columns based on screen width
+    private func getColumnCount(screenWidth: CGFloat) -> Int {
+        let cardWidth: CGFloat = 35 // Fixed width of the card
+        let spacing: CGFloat = 5 // Spacing between cards
+        return Int(screenWidth / (cardWidth + spacing)) // Calculate number of columns
+    }
 
-                                Text("Cards: \(cardCounts[currentLevel] ?? 0)") // Show cards for the current level
-                                    .font(.title3)
-                                    .foregroundColor(.white)
-                            }
-                            .opacity(showNextLevelAnimation ? 1 : 0)
-                            .transition(.scale) // Choose any other transition
-                            .animation(.easeInOut(duration: 0.5), value: showNextLevelAnimation)
-                    )
+    // Function to setup the game
+    private func setupGame() {
+        loadCardsForCurrentLevel() // Load cards based on level
+        resetSelections() // Reset selections for new game
+        flipAllCards() // Show all cards face up for a moment
+    }
+
+    // Load cards based on the current level
+    private func loadCardsForCurrentLevel() {
+        let numberOfCards = cardCounts[currentLevel, default: 10] // Get count for level
+        let emojiCount = numberOfCards / 2 // Duplicate each emoji
+        let shuffledEmojis = emojiPool.shuffled().prefix(emojiCount) // Shuffle and select unique emojis
+        var cardEmojis = Array(shuffledEmojis + shuffledEmojis).shuffled() // Create the cards
+        cards = cardEmojis.map { Card(emoji: String($0)) } // Map to Card model
+
+        // Reset all cards to face down
+        for index in cards.indices {
+            cards[index].isFaceUp = false
+        }
+        matchedCardIndices.removeAll() // Clear matched indices
+    }
+
+    // Flip all cards face up for 2 seconds, then wait for another 2 seconds before flipping them back down
+    private func flipAllCards() {
+        // Flip all cards face up
+        withAnimation(.easeInOut(duration: 0.7)) {
+            for index in cards.indices {
+                cards[index].isFaceUp = true // Show all cards face up
+            }
+        }
+
+        // Wait for 2 seconds and then flip back down
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            withAnimation(.easeInOut(duration: 0.7)) {
+                for index in cards.indices {
+                    cards[index].isFaceUp = false // Return to face down
                 }
             }
         }
-        .onAppear(perform: setupGame) // Call setupGame when the view appears
     }
 
-    private func getColumnCount(screenWidth: CGFloat) -> Int {
-        let cardWidth: CGFloat = 35 // Width of each card
-        let spacing: CGFloat = 5 // Space between cards
-        return Int(screenWidth / (cardWidth + spacing)) // Calculate the column count based on screen width
-    }
-
-    private func setupGame() {
-        loadCardsForCurrentLevel() // Load cards based on the current level
-
-        // Reset game state
-        firstSelectedCardIndex = nil
-        secondSelectedCardIndex = nil
-        matchedCardIndices.removeAll()
-        showNextLevelAnimation = false // Hide the overlay initially
-        isAnimatingTransition = false // Ensure interaction is allowed at start
-    }
-
-    private func loadCardsForCurrentLevel() {
-        let numberOfCards = cardCounts[currentLevel, default: 10]
-        let emojiCount = numberOfCards / 2 // Calculate number of pairs of emojis
-
-        let shuffledEmojis = emojiPool.shuffled().prefix(emojiCount)
-        var cardEmojis = Array(shuffledEmojis + shuffledEmojis).shuffled()
-        cards = cardEmojis.map { Card(emoji: String($0)) } // Create Card instances from emojis
-    }
-
+    // Function handling card taps
     private func cardTapped(at index: Int) {
-        guard !cards[index].isFaceUp, !matchedCardIndices.contains(index) else { return }
+        guard !isTransitioning, !cards[index].isFaceUp, !matchedCardIndices.contains(index) else { return }
 
         if firstSelectedCardIndex == nil {
-            firstSelectedCardIndex = index
-            cards[index].isFaceUp = true
+            // First card tapped
+            firstSelectedCardIndex = index // Save index of the first tapped card
+            cards[index].isFaceUp = true // Show the card face up
         } else if secondSelectedCardIndex == nil {
-            secondSelectedCardIndex = index
-            cards[index].isFaceUp = true
+            // Second card tapped
+            secondSelectedCardIndex = index // Save index of the second tapped card
+            cards[index].isFaceUp = true // Show the card face up
             
-            // Check for a match
+            // Check if the cards match
             if cards[firstSelectedCardIndex!].emoji == cards[secondSelectedCardIndex!].emoji {
-                handleMatchedCards()
+                handleMatchedCards() // Handle matched cards
             } else {
-                handleMismatchedCards()
+                handleMismatchedCards() // Handle unmatched cards
             }
         }
     }
-    
+
+    // Handle if two cards match
     private func handleMatchedCards() {
-        matchedCardIndices.insert(firstSelectedCardIndex!)
-        matchedCardIndices.insert(secondSelectedCardIndex!)
+        matchedCardIndices.insert(firstSelectedCardIndex!) // Add first index
+        matchedCardIndices.insert(secondSelectedCardIndex!) // Add second index
 
-        // Check for game completion
+        // Check if all cards are matched
         if matchedCardIndices.count == cards.count {
-            transitionToNextLevel() // Automatically transition to the next level
-        } else {
-            resetSelections() // Reset selections if not all cards matched
-        }
-    }
-
-    private func handleMismatchedCards() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            withAnimation {
-                cards[firstSelectedCardIndex!].isFaceUp = false
-                cards[secondSelectedCardIndex!].isFaceUp = false
+            showCongratsMessage = true // Show congrats message
+            nextLevel = (currentLevel < 5) ? currentLevel + 1 : 1 // Determine the next level
+            
+            // Delay to show the congrats message before transitioning
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                transitionToNextLevel() // Transition to next level
             }
-            resetSelections() // Reset selections after a delay
-        }
-    }
-
-    private func resetSelections() {
-        firstSelectedCardIndex = nil
-        secondSelectedCardIndex = nil
-    }
-
-    private func transitionToNextLevel() {
-        isAnimatingTransition = true // Prevent any card interactions during this transition animation
-
-        // Increase level up to the maximum
-        if currentLevel < 5 {
-            currentLevel += 1
         } else {
-            currentLevel = 1 // Reset to level 1 if max reached
-        }
-
-        showNextLevelAnimation = true; // Trigger the overlay animation
-
-        // Setup new game after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            loadCardsForCurrentLevel() // Load new cards for the new level
-            resetSelections() // Reset selections for the new game
-            showNextLevelAnimation = false; // Hide the overlay
-            isAnimatingTransition = false // Re-enable card interactions
+            resetSelections() // Reset selections
         }
     }
 
+    // Handle if cards do not match
+    private func handleMismatchedCards() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { // Corrected usage here
+            cards[firstSelectedCardIndex!].isFaceUp = false // Flip first card back
+            cards[secondSelectedCardIndex!].isFaceUp = false // Flip second card back
+            resetSelections() // Reset selections
+        }
+    }
+
+    // Reset selection indices
+    private func resetSelections() {
+        firstSelectedCardIndex = nil // Clear index for first selection
+        secondSelectedCardIndex = nil // Clear index for second selection
+    }
+
+    // Transition to the next level
+    private func transitionToNextLevel() {
+        isTransitioning = true // Set transitioning flag
+
+        // Load new cards for the next level
+        loadCardsForCurrentLevel() // Load new cards
+
+        // Show all cards face up for 2 seconds
+        flipAllCards() // Show all cards face up
+
+        // After cards are displayed, allow interactions again
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { // Wait until the flipping back animation is done
+            showCongratsMessage = false // Hide Congrats message
+            nextLevel = nil // Reset next level information
+            isTransitioning = false // Allow interactions again
+            resetSelections() // Reset selections
+        }
+    }
+
+    // Pool of emojis available for game
     private let emojiPool: [String] = [
         "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐸",
         "🍏", "🍎", "🍐", "🍊", "🍋", "🍉", "🍇", "🍓", "🍈", "🍌",
